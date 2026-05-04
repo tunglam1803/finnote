@@ -18,9 +18,11 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Lấy danh sách tên những người đã từng trả tiền để làm gợi ý
+  // Lấy danh sách tên những người đã từng trả tiền + 3 người mặc định để làm gợi ý
   const uniqueNames = useMemo(() => {
-    return Array.from(new Set(expenses.map(e => e.payer_name)));
+    const defaultNames = ['Lâm', 'Đích', 'Quang Anh'];
+    const combined = [...defaultNames, ...expenses.map(e => e.payer_name)];
+    return Array.from(new Set(combined));
   }, [expenses]);
 
   useEffect(() => {
