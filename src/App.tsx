@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from './lib/supabase';
-import { Plus, Trash2, Users, Calculator, ReceiptText, ArrowRightLeft } from 'lucide-react';
+import { Plus, Users, Calculator, ReceiptText } from 'lucide-react';
 
 interface Expense {
   id: string;
