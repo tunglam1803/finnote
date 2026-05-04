@@ -11,13 +11,6 @@ interface Expense {
   tab_name?: string;
 }
 
-const tabs = [
-  { id: 'all', label: 'Cả nhóm', people: ['Lâm', 'Đích', 'Quang Anh'] },
-  { id: 'lam-dich', label: 'Lâm - Đích', people: ['Lâm', 'Đích'] },
-  { id: 'lam-qa', label: 'Lâm - Quang Anh', people: ['Lâm', 'Quang Anh'] },
-  { id: 'dich-qa', label: 'Đích - Quang Anh', people: ['Đích', 'Quang Anh'] }
-];
-
 function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [payerName, setPayerName] = useState('Lâm');
@@ -27,6 +20,17 @@ function App() {
   const [submitting, setSubmitting] = useState(false);
   const [currentTabId, setCurrentTabId] = useState('all');
   const [showPairTabs, setShowPairTabs] = useState(false);
+  
+  const [customPeople, setCustomPeople] = useState<string[]>(['Người 1', 'Người 2']);
+  const [newCustomPerson, setNewCustomPerson] = useState('');
+
+  const tabs = useMemo(() => [
+    { id: 'all', label: 'Cả nhóm', people: ['Lâm', 'Đích', 'Quang Anh'] },
+    { id: 'lam-dich', label: 'Lâm - Đích', people: ['Lâm', 'Đích'] },
+    { id: 'lam-qa', label: 'Lâm - Quang Anh', people: ['Lâm', 'Quang Anh'] },
+    { id: 'dich-qa', label: 'Đích - Quang Anh', people: ['Đích', 'Quang Anh'] },
+    { id: 'custom', label: 'Tùy chọn', people: customPeople }
+  ], [customPeople]);
 
   const activeTab = tabs.find(t => t.id === currentTabId) || tabs[0];
   const peopleNames = activeTab.people;
@@ -36,8 +40,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setPayerName(peopleNames[0]);
-  }, [currentTabId]);
+    setPayerName(peopleNames[0] || '');
+  }, [currentTabId, peopleNames]);
 
   async function fetchExpenses() {
     try {
@@ -224,6 +228,61 @@ function App() {
 
       <div className="px-4 max-w-lg mx-auto space-y-6">
         
+        {currentTabId === 'custom' && (
+          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+            <h3 className="text-[17px] font-semibold text-black flex items-center gap-2">
+              <Users className="w-5 h-5 text-indigo-500" />
+              Quản lý người trong Tab Tùy chọn
+            </h3>
+            
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCustomPerson}
+                onChange={(e) => setNewCustomPerson(e.target.value)}
+                placeholder="Tên người mới (vd: Hùng)"
+                className="flex-1 px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-base"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newCustomPerson.trim()) return;
+                  if (customPeople.includes(newCustomPerson.trim())) return;
+                  setCustomPeople([...customPeople, newCustomPerson.trim()]);
+                  setNewCustomPerson('');
+                }}
+                className="px-4 py-2.5 bg-blue-500 text-white font-semibold rounded-xl text-sm transition-colors hover:bg-blue-600"
+              >
+                Thêm
+              </button>
+            </div>
+
+            <div className="flex gap-1.5 flex-wrap">
+              {customPeople.map(person => (
+                <span
+                  key={person}
+                  className="inline-flex items-center bg-indigo-50 text-indigo-600 font-medium text-xs px-2.5 py-1.5 rounded-lg border border-indigo-100 gap-1.5"
+                >
+                  {person}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (customPeople.length <= 1) {
+                        alert('Tab tùy chọn phải có ít nhất 1 người!');
+                        return;
+                      }
+                      setCustomPeople(customPeople.filter(p => p !== person));
+                    }}
+                    className="text-indigo-400 hover:text-indigo-600 text-sm font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Form nhập liệu */}
         <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
           <h2 className="text-[17px] font-semibold text-black mb-4 flex items-center gap-2">
