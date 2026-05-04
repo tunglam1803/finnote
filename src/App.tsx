@@ -8,7 +8,15 @@ interface Expense {
   payer_name: string;
   amount: number;
   note: string;
+  tab_name?: string;
 }
+
+const tabs = [
+  { id: 'all', label: 'Cả nhóm', people: ['Lâm', 'Đích', 'Quang Anh'] },
+  { id: 'lam-dich', label: 'Lâm - Đích', people: ['Lâm', 'Đích'] },
+  { id: 'lam-qa', label: 'Lâm - Quang Anh', people: ['Lâm', 'Quang Anh'] },
+  { id: 'dich-qa', label: 'Đích - Quang Anh', people: ['Đích', 'Quang Anh'] }
+];
 
 function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -17,12 +25,18 @@ function App() {
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [currentTabId, setCurrentTabId] = useState('all');
 
-  const peopleNames = ['Lâm', 'Đích', 'Quang Anh'];
+  const activeTab = tabs.find(t => t.id === currentTabId) || tabs[0];
+  const peopleNames = activeTab.people;
 
   useEffect(() => {
     fetchExpenses();
   }, []);
+
+  useEffect(() => {
+    setPayerName(peopleNames[0]);
+  }, [currentTabId]);
 
   async function fetchExpenses() {
     try {
@@ -33,7 +47,11 @@ function App() {
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setExpenses(data || []);
+      const processed = (data || []).map(e => ({
+        ...e,
+        tab_name: e.tab_name || 'all'
+      }));
+      setExpenses(processed);
     } catch (err: any) {
       console.error(err);
     } finally {
@@ -50,7 +68,8 @@ function App() {
       const newExp = {
         payer_name: payerName.trim(),
         amount: parseFloat(amount),
-        note: note.trim()
+        note: note.trim(),
+        tab_name: currentTabId
       };
 
       const { data, error } = await supabase
@@ -61,7 +80,7 @@ function App() {
       if (error) throw error;
 
       if (data) {
-        setExpenses([...expenses, data[0]]);
+        setExpenses([...expenses, { ...data[0], tab_name: currentTabId }]);
       }
       setAmount('');
       setNote('');
@@ -84,12 +103,14 @@ function App() {
   }
 
   async function resetAll() {
-    if (!confirm('Bạn có chắc muốn xóa tất cả các khoản chi hiện tại để bắt đầu lại từ đầu không?')) return;
+    if (!confirm(`Bạn có chắc muốn xóa tất cả các khoản chi của "${activeTab.label}" không?`)) return;
     try {
-      // Xóa tất cả các dòng bằng cách match các dòng có id không null
-      const { error } = await supabase.from('group_expenses').delete().not('id', 'is', null);
+      const { error } = await supabase
+        .from('group_expenses')
+        .delete()
+        .eq('tab_name', currentTabId);
       if (error) throw error;
-      setExpenses([]);
+      setExpenses(expenses.filter(e => (e.tab_name || 'all') !== currentTabId));
     } catch (err: any) {
       alert(err.message);
     }
@@ -98,10 +119,13 @@ function App() {
   // Tính toán giống như trong Note của Apple
   const summary = useMemo(() => {
     const map = new Map<string, Expense[]>();
-    // Khởi tạo trước cho 3 người
+    // Khởi tạo trước cho những người thuộc tab hiện tại
     peopleNames.forEach(name => map.set(name, []));
 
-    expenses.forEach(e => {
+    // Lọc theo tab hiện tại
+    const currentTabExpenses = expenses.filter(e => (e.tab_name || 'all') === currentTabId);
+
+    currentTabExpenses.forEach(e => {
       const name = e.payer_name;
       if (map.has(name)) {
         map.get(name)!.push(e);
@@ -127,7 +151,7 @@ function App() {
       grandTotal,
       numPeople: result.length || 1,
     };
-  }, [expenses]);
+  }, [expenses, currentTabId]);
 
   const averagePerPerson = summary.grandTotal / summary.numPeople;
 
@@ -138,7 +162,7 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f2f2f7] pb-24 font-sans">
       {/* Header */}
-      <div className="bg-white px-6 pt-12 pb-6 shadow-sm mb-6 sticky top-0 z-10 flex justify-between items-center">
+      <div className="bg-white px-6 pt-12 pb-6 shadow-sm sticky top-0 z-10 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-black mb-1 flex items-center gap-2">
           <Users className="w-6 h-6 text-indigo-500" />
           Chia Tiền Nhóm
@@ -150,6 +174,25 @@ function App() {
           <RotateCcw className="w-3.5 h-3.5" />
           Xóa hết
         </button>
+      </div>
+
+      {/* Tabs navigation */}
+      <div className="px-4 max-w-lg mx-auto mt-6 mb-6">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl border border-gray-200">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              onClick={() => setCurrentTabId(t.id)}
+              className={`flex-1 py-2 text-xs font-semibold rounded-xl text-center transition-all ${
+                currentTabId === t.id 
+                  ? 'bg-white text-blue-600 shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="px-4 max-w-lg mx-auto space-y-6">
