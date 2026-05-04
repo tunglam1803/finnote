@@ -26,6 +26,7 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [currentTabId, setCurrentTabId] = useState('all');
+  const [showPairTabs, setShowPairTabs] = useState(false);
 
   const activeTab = tabs.find(t => t.id === currentTabId) || tabs[0];
   const peopleNames = activeTab.people;
@@ -178,21 +179,47 @@ function App() {
 
       {/* Tabs navigation */}
       <div className="px-4 max-w-lg mx-auto mt-6 mb-6">
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl border border-gray-200">
-          {tabs.map(t => (
-            <button
-              key={t.id}
-              onClick={() => setCurrentTabId(t.id)}
-              className={`flex-1 py-2 text-xs font-semibold rounded-xl text-center transition-all ${
-                currentTabId === t.id 
-                  ? 'bg-white text-blue-600 shadow-sm' 
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-gray-500 font-medium">Bản ghi</span>
+          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+            <input 
+              type="checkbox" 
+              checked={showPairTabs} 
+              onChange={(e) => {
+                setShowPairTabs(e.target.checked);
+                if (!e.target.checked) setCurrentTabId('all');
+              }}
+              className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
+            />
+            <span className="text-xs text-gray-500 font-medium">Hiện các cặp đôi (tùy chọn)</span>
+          </label>
         </div>
+
+        {showPairTabs ? (
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl border border-gray-200">
+            {tabs.map(t => (
+              <button
+                key={t.id}
+                onClick={() => setCurrentTabId(t.id)}
+                className={`flex-1 py-2 text-xs font-semibold rounded-xl text-center transition-all ${
+                  currentTabId === t.id 
+                    ? 'bg-white text-blue-600 shadow-sm' 
+                    : 'text-gray-600 hover:bg-gray-50'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-white p-3 rounded-2xl border border-gray-100 flex items-center justify-between shadow-sm">
+            <div>
+              <p className="text-sm font-bold text-black">Chế độ cả nhóm</p>
+              <p className="text-xs text-gray-400">Ghi nhận chi tiêu chung cho cả 3 người</p>
+            </div>
+            <span className="bg-blue-50 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-lg">Đang bật</span>
+          </div>
+        )}
       </div>
 
       <div className="px-4 max-w-lg mx-auto space-y-6">
