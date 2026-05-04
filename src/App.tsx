@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from './lib/supabase';
-import { Plus, Users, Calculator, ReceiptText } from 'lucide-react';
+import { Plus, Users, Calculator, ReceiptText, RotateCcw } from 'lucide-react';
 
 interface Expense {
   id: string;
@@ -83,6 +83,18 @@ function App() {
     }
   }
 
+  async function resetAll() {
+    if (!confirm('Bạn có chắc muốn xóa tất cả các khoản chi hiện tại để bắt đầu lại từ đầu không?')) return;
+    try {
+      // Xóa tất cả các dòng bằng cách match các dòng có id không null
+      const { error } = await supabase.from('group_expenses').delete().not('id', 'is', null);
+      if (error) throw error;
+      setExpenses([]);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  }
+
   // Tính toán giống như trong Note của Apple
   const summary = useMemo(() => {
     const map = new Map<string, Expense[]>();
@@ -126,11 +138,18 @@ function App() {
   return (
     <div className="min-h-screen bg-[#f2f2f7] pb-24 font-sans">
       {/* Header */}
-      <div className="bg-white px-6 pt-12 pb-6 shadow-sm mb-6 sticky top-0 z-10">
+      <div className="bg-white px-6 pt-12 pb-6 shadow-sm mb-6 sticky top-0 z-10 flex justify-between items-center">
         <h1 className="text-2xl font-bold text-black mb-1 flex items-center gap-2">
           <Users className="w-6 h-6 text-indigo-500" />
           Chia Tiền Nhóm
         </h1>
+        <button 
+          onClick={resetAll}
+          className="text-xs text-red-500 hover:text-red-600 font-semibold bg-red-50 hover:bg-red-100 px-3.5 py-2 rounded-xl flex items-center gap-1.5 transition-colors shadow-sm"
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Xóa hết
+        </button>
       </div>
 
       <div className="px-4 max-w-lg mx-auto space-y-6">
@@ -207,10 +226,16 @@ function App() {
                   <div className="flex flex-wrap items-baseline gap-1">
                     <span className="font-bold text-black">{person.name}:</span>
                     {person.items.map((item, idx) => (
-                      <span key={item.id} className="text-gray-700 group relative flex items-center">
+                      <span key={item.id} className="inline-flex items-center text-gray-700">
                         {idx > 0 && <span className="mx-1">+</span>}
-                        <span className="cursor-pointer hover:bg-red-50 hover:text-red-500 rounded px-1 transition-colors" onClick={() => deleteExpense(item.id)} title="Nhấn để xóa">
-                          {item.amount}{item.note && <span className="text-gray-400 text-sm">({item.note})</span>}
+                        <span 
+                          onClick={() => deleteExpense(item.id)}
+                          className="cursor-pointer inline-flex items-center bg-gray-50 hover:bg-red-50 hover:text-red-500 active:bg-red-100 rounded-lg px-2 py-0.5 border border-gray-100 transition-colors text-[16px] gap-1 select-none"
+                          title="Nhấn để xóa"
+                        >
+                          <span>{item.amount}</span>
+                          {item.note && <span className="text-gray-400 text-sm">({item.note})</span>}
+                          <span className="text-gray-300 hover:text-red-400 text-xs font-semibold ml-0.5">×</span>
                         </span>
                       </span>
                     ))}
