@@ -191,7 +191,7 @@ function App() {
               }}
               className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer" 
             />
-            <span className="text-xs text-gray-500 font-medium">Hiện các cặp đôi (tùy chọn)</span>
+            <span className="text-xs text-gray-500 font-medium">Hiện theo cặp (tùy chọn)</span>
           </label>
         </div>
 
