@@ -12,18 +12,13 @@ interface Expense {
 
 function App() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [payerName, setPayerName] = useState('');
+  const [payerName, setPayerName] = useState('Lâm');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Lấy danh sách tên những người đã từng trả tiền + 3 người mặc định để làm gợi ý
-  const uniqueNames = useMemo(() => {
-    const defaultNames = ['Lâm', 'Đích', 'Quang Anh'];
-    const combined = [...defaultNames, ...expenses.map(e => e.payer_name)];
-    return Array.from(new Set(combined));
-  }, [expenses]);
+  const peopleNames = ['Lâm', 'Đích', 'Quang Anh'];
 
   useEffect(() => {
     fetchExpenses();
@@ -91,10 +86,14 @@ function App() {
   // Tính toán giống như trong Note của Apple
   const summary = useMemo(() => {
     const map = new Map<string, Expense[]>();
+    // Khởi tạo trước cho 3 người
+    peopleNames.forEach(name => map.set(name, []));
+
     expenses.forEach(e => {
       const name = e.payer_name;
-      if (!map.has(name)) map.set(name, []);
-      map.get(name)!.push(e);
+      if (map.has(name)) {
+        map.get(name)!.push(e);
+      }
     });
 
     const result: Array<{
@@ -146,14 +145,14 @@ function App() {
           <form onSubmit={addExpense} className="space-y-4">
             <div>
               <div className="flex gap-2 flex-wrap mb-2">
-                {uniqueNames.map(name => (
+                {peopleNames.map(name => (
                   <button
                     key={name}
                     type="button"
                     onClick={() => setPayerName(name)}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    className={`px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
                       payerName === name 
-                        ? 'bg-blue-500 text-white' 
+                        ? 'bg-blue-500 text-white shadow-md' 
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -161,14 +160,6 @@ function App() {
                   </button>
                 ))}
               </div>
-              <input
-                type="text"
-                value={payerName}
-                onChange={(e) => setPayerName(e.target.value)}
-                placeholder="Ai là người trả? (vd: Lâm)"
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-[17px]"
-                required
-              />
             </div>
             
             <div className="flex gap-3">
