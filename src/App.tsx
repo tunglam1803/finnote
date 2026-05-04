@@ -131,7 +131,6 @@ function App() {
           <Users className="w-6 h-6 text-indigo-500" />
           Chia Tiền Nhóm
         </h1>
-        <p className="text-sm text-gray-500">Thay thế hoàn hảo cho Apple Notes</p>
       </div>
 
       <div className="px-4 max-w-lg mx-auto space-y-6">
