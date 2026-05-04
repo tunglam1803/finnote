@@ -369,6 +369,61 @@ function App() {
                 );
               })}
             </div>
+
+            {/* Chi tiết giao dịch chuyển tiền */}
+            {(() => {
+              const people = summary.people.map(p => ({
+                name: p.name,
+                balance: p.total - averagePerPerson
+              }));
+
+              const creditors = people.filter(p => p.balance > 0.1).sort((a, b) => b.balance - a.balance);
+              const debtors = people.filter(p => p.balance < -0.1).sort((a, b) => a.balance - b.balance);
+
+              const txs: Array<{ from: string; to: string; amount: number }> = [];
+
+              let cIdx = 0;
+              let dIdx = 0;
+
+              while (cIdx < creditors.length && dIdx < debtors.length) {
+                const creditor = creditors[cIdx];
+                const debtor = debtors[dIdx];
+
+                const amountToPay = Math.min(creditor.balance, Math.abs(debtor.balance));
+
+                txs.push({
+                  from: debtor.name,
+                  to: creditor.name,
+                  amount: amountToPay
+                });
+
+                creditor.balance -= amountToPay;
+                debtor.balance += amountToPay;
+
+                if (creditor.balance < 0.1) cIdx++;
+                if (debtor.balance > -0.1) dIdx++;
+              }
+
+              if (txs.length === 0) return null;
+
+              return (
+                <div className="mt-4 pt-4 border-t border-white/20">
+                  <p className="text-xs text-indigo-100 font-semibold mb-2">Lịch sử trả tiền cụ thể:</p>
+                  <div className="space-y-2">
+                    {txs.map((tx, idx) => (
+                      <div key={idx} className="bg-white/10 rounded-xl p-3 flex justify-between items-center">
+                        <span className="text-sm">
+                          <strong className="text-red-300">{tx.from}</strong> trả cho <strong className="text-green-300">{tx.to}</strong>
+                        </span>
+                        <span className="font-bold text-sm bg-white/20 px-2 py-0.5 rounded-lg">
+                          {formatMoney(tx.amount)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
